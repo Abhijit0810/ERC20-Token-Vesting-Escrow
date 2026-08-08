@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Token Vesting Protocol | VEST Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-primary: #080b14;
+      --bg-secondary: #0d1120;
+      --bg-card: rgba(255,255,255,0.04);
+      --bg-card-hover: rgba(255,255,255,0.07);
+      --border: rgba(255,255,255,0.08);
+      --border-glow: rgba(139,92,246,0.4);
+      --purple: #8b5cf6;
+      --purple-light: #a78bfa;
+      --cyan: #06b6d4;
+      --cyan-light: #67e8f9;
+      --green: #10b981;
+      --green-light: #34d399;
+      --red: #ef4444;
+      --amber: #f59e0b;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #475569;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── BACKGROUND ── */
+    .bg-grid {
+      position: fixed; inset: 0; z-index: 0;
+      background-image:
+        linear-gradient(rgba(139,92,246,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(139,92,246,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+    .bg-orb {
+      position: fixed; border-radius: 50%; filter: blur(120px); pointer-events: none; z-index: 0;
+    }
+    .bg-orb-1 { width: 600px; height: 600px; background: rgba(139,92,246,0.12); top: -200px; left: -200px; }
+    .bg-orb-2 { width: 500px; height: 500px; background: rgba(6,182,212,0.08); bottom: -200px; right: -200px; }
+    .bg-orb-3 { width: 400px; height: 400px; background: rgba(16,185,129,0.06); top: 50%; left: 50%; transform: translate(-50%,-50%); }
+
+    /* ── LAYOUT ── */
+    .app { position: relative; z-index: 1; min-height: 100vh; }
+
+    /* ── HEADER ── */
+    header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 40px;
+      background: rgba(8,11,20,0.8);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .logo { display: flex; align-items: center; gap: 12px; }
+    .logo-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--purple), var(--cyan));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; font-weight: 800;
+      box-shadow: 0 0 20px rgba(139,92,246,0.4);
+    }
+    .logo-text { font-size: 18px; font-weight: 700; }
+    .logo-text span { background: linear-gradient(90deg, var(--purple-light), var(--cyan-light)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+    .header-right { display: flex; align-items: center; gap: 16px; }
+    .network-badge {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 14px; border-radius: 20px;
+      background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2);
+      font-size: 13px; font-weight: 500; color: var(--green-light);
+    }
+    .network-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse 2s infinite; }
+
+    .btn-wallet {
+      padding: 10px 20px; border-radius: 10px; border: none; cursor: pointer;
+      background: linear-gradient(135deg, var(--purple), var(--cyan));
+      color: white; font-size: 14px; font-weight: 600;
+      box-shadow: 0 0 20px rgba(139,92,246,0.3);
+      transition: all 0.3s; font-family: 'Inter', sans-serif;
+    }
+    .btn-wallet:hover { transform: translateY(-2px); box-shadow: 0 0 30px rgba(139,92,246,0.5); }
+
+    /* ── MAIN CONTAINER ── */
+    main { max-width: 1280px; margin: 0 auto; padding: 40px 40px; }
+
+    /* ── SECTION TITLE ── */
+    .section-title {
+      font-size: 13px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 2px; color: var(--text-muted); margin-bottom: 20px;
+    }
+
+    /* ── STATS ROW ── */
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 36px; }
+    .stat-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 24px;
+      transition: all 0.3s; position: relative; overflow: hidden;
+    }
+    .stat-card::before {
+      content: ''; position: absolute; inset: 0; border-radius: 16px;
+      background: linear-gradient(135deg, rgba(139,92,246,0.05), transparent);
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .stat-card:hover { border-color: var(--border-glow); background: var(--bg-card-hover); }
+    .stat-card:hover::before { opacity: 1; }
+    .stat-label { font-size: 13px; color: var(--text-muted); margin-bottom: 10px; font-weight: 500; }
+    .stat-value { font-size: 28px; font-weight: 800; font-family: 'JetBrains Mono', monospace; }
+    .stat-value.purple { color: var(--purple-light); }
+    .stat-value.cyan { color: var(--cyan-light); }
+    .stat-value.green { color: var(--green-light); }
+    .stat-value.amber { color: var(--amber); }
+    .stat-sub { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+
+    /* ── TIMELINE ── */
+    .timeline-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 20px; padding: 28px; margin-bottom: 36px;
+    }
+    .timeline-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+    .timeline-title { font-size: 16px; font-weight: 700; }
+    .timeline-dates { font-size: 12px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+
+    .timeline-track { position: relative; height: 8px; border-radius: 100px; background: rgba(255,255,255,0.06); margin: 20px 0 36px; }
+    .timeline-fill {
+      position: absolute; left: 0; top: 0; height: 100%; border-radius: 100px;
+      background: linear-gradient(90deg, var(--purple), var(--cyan));
+      box-shadow: 0 0 12px rgba(139,92,246,0.5);
+      transition: width 1.5s ease;
+    }
+    .timeline-cliff {
+      position: absolute; top: -8px; width: 2px; height: 24px;
+      background: var(--amber); border-radius: 1px;
+    }
+    .timeline-cliff::after {
+      content: 'Cliff (3mo)'; position: absolute; top: 28px; left: 50%; transform: translateX(-50%);
+      font-size: 11px; color: var(--amber); white-space: nowrap; font-weight: 600;
+    }
+    .timeline-now {
+      position: absolute; top: -10px; width: 4px; height: 28px;
+      background: white; border-radius: 2px;
+      box-shadow: 0 0 10px rgba(255,255,255,0.8);
+    }
+    .timeline-now::after {
+      content: 'Now'; position: absolute; top: 32px; left: 50%; transform: translateX(-50%);
+      font-size: 11px; color: white; white-space: nowrap; font-weight: 700;
+    }
+    .timeline-labels { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); }
+    .timeline-labels span { font-weight: 600; }
+
+    /* ── BENEFICIARY CARDS ── */
+    .beneficiaries-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 36px; }
+
+    .ben-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 20px; padding: 28px; position: relative; overflow: hidden;
+      transition: all 0.4s;
+    }
+    .ben-card:hover { border-color: var(--border-glow); background: var(--bg-card-hover); transform: translateY(-3px); }
+    .ben-card.alice { --accent: var(--purple); --accent-light: var(--purple-light); }
+    .ben-card.bob { --accent: var(--cyan); --accent-light: var(--cyan-light); }
+    .ben-card::after {
+      content: ''; position: absolute; top: 0; right: 0;
+      width: 200px; height: 200px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 70%);
+      transform: translate(30%, -30%);
+    }
+    .ben-card.bob::after { background: radial-gradient(circle, rgba(6,182,212,0.08) 0%, transparent 70%); }
+
+    .ben-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+    .ben-identity { display: flex; align-items: center; gap: 14px; }
+    .ben-avatar {
+      width: 48px; height: 48px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; font-weight: 800;
+    }
+    .alice .ben-avatar { background: linear-gradient(135deg, rgba(139,92,246,0.3), rgba(139,92,246,0.1)); border: 1px solid rgba(139,92,246,0.3); color: var(--purple-light); }
+    .bob .ben-avatar { background: linear-gradient(135deg, rgba(6,182,212,0.3), rgba(6,182,212,0.1)); border: 1px solid rgba(6,182,212,0.3); color: var(--cyan-light); }
+    .ben-name { font-size: 18px; font-weight: 700; }
+    .ben-address { font-size: 11px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; margin-top: 2px; }
+
+    /* Circular progress ring */
+    .ring-wrap { position: relative; width: 90px; height: 90px; }
+    .ring-svg { transform: rotate(-90deg); }
+    .ring-bg { fill: none; stroke: rgba(255,255,255,0.06); stroke-width: 8; }
+    .ring-fill { fill: none; stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 2s ease; }
+    .alice .ring-fill { stroke: url(#purpleGrad); filter: drop-shadow(0 0 6px rgba(139,92,246,0.6)); }
+    .bob .ring-fill { stroke: url(#cyanGrad); filter: drop-shadow(0 0 6px rgba(6,182,212,0.6)); }
+    .ring-text {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    .ring-pct { font-size: 18px; font-weight: 800; font-family: 'JetBrains Mono', monospace; }
+    .alice .ring-pct { color: var(--purple-light); }
+    .bob .ring-pct { color: var(--cyan-light); }
+    .ring-label { font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+
+    .ben-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+    .ben-stat { background: rgba(255,255,255,0.04); border-radius: 10px; padding: 12px; }
+    .ben-stat-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    .ben-stat-value { font-size: 15px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+
+    .progress-bar-wrap { margin-bottom: 20px; }
+    .progress-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
+    .progress-bar { height: 6px; background: rgba(255,255,255,0.06); border-radius: 100px; overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 100px; transition: width 2s ease; }
+    .alice .progress-fill { background: linear-gradient(90deg, var(--purple), var(--purple-light)); box-shadow: 0 0 8px rgba(139,92,246,0.5); }
+    .bob .progress-fill { background: linear-gradient(90deg, var(--cyan), var(--cyan-light)); box-shadow: 0 0 8px rgba(6,182,212,0.5); }
+
+    .btn-claim {
+      width: 100%; padding: 14px; border: none; border-radius: 12px; cursor: pointer;
+      font-size: 15px; font-weight: 700; font-family: 'Inter', sans-serif;
+      transition: all 0.3s; position: relative; overflow: hidden;
+    }
+    .btn-claim.active {
+      background: linear-gradient(135deg, var(--green), #059669);
+      color: white; box-shadow: 0 0 20px rgba(16,185,129,0.4);
+    }
+    .btn-claim.active:hover { transform: translateY(-2px); box-shadow: 0 0 30px rgba(16,185,129,0.6); }
+    .btn-claim.disabled {
+      background: rgba(255,255,255,0.05); color: var(--text-muted);
+      border: 1px solid var(--border); cursor: not-allowed;
+    }
+    .btn-claim.claimed {
+      background: rgba(139,92,246,0.1); color: var(--purple-light);
+      border: 1px solid rgba(139,92,246,0.2); cursor: default;
+    }
+
+    /* ── OWNER PANEL ── */
+    .owner-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 20px; padding: 28px; margin-bottom: 36px;
+    }
+    .owner-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+    .owner-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; }
+    .owner-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .owner-btn {
+      display: flex; flex-direction: column; align-items: center; gap: 10px;
+      padding: 20px; border-radius: 14px; cursor: pointer; border: none;
+      font-family: 'Inter', sans-serif; transition: all 0.3s;
+    }
+    .owner-btn-icon { font-size: 24px; }
+    .owner-btn-label { font-size: 13px; font-weight: 600; }
+    .owner-btn-desc { font-size: 11px; text-align: center; line-height: 1.4; }
+
+    .owner-btn.allocate { background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.2); color: var(--purple-light); }
+    .owner-btn.allocate:hover { background: rgba(139,92,246,0.2); border-color: rgba(139,92,246,0.4); transform: translateY(-3px); }
+    .owner-btn.pause { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.2); color: var(--amber); }
+    .owner-btn.pause:hover { background: rgba(245,158,11,0.2); border-color: rgba(245,158,11,0.4); transform: translateY(-3px); }
+    .owner-btn.withdraw { background: rgba(6,182,212,0.1); border: 1px solid rgba(6,182,212,0.2); color: var(--cyan-light); }
+    .owner-btn.withdraw:hover { background: rgba(6,182,212,0.2); border-color: rgba(6,182,212,0.4); transform: translateY(-3px); }
+
+    /* ── CONTRACT INFO ── */
+    .contracts-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 36px; }
+    .contract-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 20px;
+    }
+    .contract-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+    .contract-address {
+      font-family: 'JetBrains Mono', monospace; font-size: 13px;
+      color: var(--text-primary); word-break: break-all;
+      background: rgba(255,255,255,0.04); padding: 10px 12px; border-radius: 8px;
+    }
+
+    /* ── ACTIVITY LOG ── */
+    .activity-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 20px; padding: 28px; margin-bottom: 36px;
+    }
+    .activity-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .activity-title { font-size: 16px; font-weight: 700; }
+    .live-badge {
+      display: flex; align-items: center; gap: 6px; font-size: 12px;
+      color: var(--green-light); font-weight: 600;
+    }
+    .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 1.5s infinite; box-shadow: 0 0 6px var(--green); }
+
+    .activity-item {
+      display: flex; align-items: flex-start; gap: 14px;
+      padding: 14px 0; border-bottom: 1px solid var(--border);
+    }
+    .activity-item:last-child { border-bottom: none; }
+    .activity-icon {
+      width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; font-size: 16px;
+    }
+    .activity-body { flex: 1; }
+    .activity-title-text { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .activity-desc { font-size: 12px; color: var(--text-muted); }
+    .activity-time { font-size: 11px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
+
+    /* ── TOAST ── */
+    .toast-container { position: fixed; bottom: 30px; right: 30px; z-index: 999; display: flex; flex-direction: column; gap: 10px; }
+    .toast {
+      padding: 14px 20px; border-radius: 12px; font-size: 14px; font-weight: 600;
+      backdrop-filter: blur(20px); border: 1px solid;
+      animation: slideIn 0.3s ease; max-width: 320px;
+    }
+    .toast.success { background: rgba(16,185,129,0.15); border-color: rgba(16,185,129,0.3); color: var(--green-light); }
+    .toast.info { background: rgba(139,92,246,0.15); border-color: rgba(139,92,246,0.3); color: var(--purple-light); }
+    .toast.warning { background: rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.3); color: var(--amber); }
+    .toast.error { background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.3); color: #fca5a5; }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(8,11,20,0.8); backdrop-filter: blur(10px);
+      z-index: 500; display: none; align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: #0d1120; border: 1px solid var(--border);
+      border-radius: 24px; padding: 36px; width: 460px; max-width: 90vw;
+      animation: slideUp 0.3s ease;
+    }
+    .modal-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+    .modal-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 28px; }
+    .modal-input-group { margin-bottom: 16px; }
+    .modal-label { font-size: 13px; color: var(--text-secondary); margin-bottom: 8px; display: block; font-weight: 500; }
+    .modal-input {
+      width: 100%; padding: 12px 16px; border-radius: 10px;
+      background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+      color: white; font-size: 14px; font-family: 'Inter', sans-serif;
+      outline: none; transition: border-color 0.2s;
+    }
+    .modal-input:focus { border-color: var(--purple); }
+    .modal-input::placeholder { color: var(--text-muted); }
+    .modal-actions { display: flex; gap: 12px; margin-top: 24px; }
+    .modal-btn {
+      flex: 1; padding: 12px; border-radius: 10px; border: none;
+      font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s;
+    }
+    .modal-btn.primary { background: linear-gradient(135deg, var(--purple), var(--cyan)); color: white; }
+    .modal-btn.primary:hover { opacity: 0.9; }
+    .modal-btn.cancel { background: rgba(255,255,255,0.06); color: var(--text-secondary); border: 1px solid var(--border); }
+    .modal-btn.cancel:hover { background: rgba(255,255,255,0.1); }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center; padding: 30px;
+      font-size: 12px; color: var(--text-muted);
+      border-top: 1px solid var(--border);
+    }
+    footer span { color: var(--purple-light); }
+
+    /* ── ANIMATIONS ── */
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+    @keyframes slideIn { from { transform: translateX(100px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    @keyframes slideUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes countUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .fade-in { animation: fadeIn 0.5s ease both; }
+    .fade-in-1 { animation-delay: 0.1s; }
+    .fade-in-2 { animation-delay: 0.2s; }
+    .fade-in-3 { animation-delay: 0.3s; }
+    .fade-in-4 { animation-delay: 0.4s; }
+    .fade-in-5 { animation-delay: 0.5s; }
+    .fade-in-6 { animation-delay: 0.6s; }
+
+    @media (max-width: 900px) {
+      header { padding: 16px 20px; }
+      main { padding: 24px 20px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .beneficiaries-grid { grid-template-columns: 1fr; }
+      .owner-actions { grid-template-columns: 1fr; }
+      .contracts-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="bg-orb bg-orb-1"></div>
+<div class="bg-orb bg-orb-2"></div>
+<div class="bg-orb bg-orb-3"></div>
+
+<div class="app">
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo">
+      <div class="logo-icon">V</div>
+      <div>
+        <div class="logo-text"><span>Token Vesting</span> Protocol</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="network-badge">
+        <div class="network-dot"></div>
+        Anvil Localhost
+      </div>
+      <button class="btn-wallet" onclick="connectWallet()">🔗 Connect Wallet</button>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main>
+
+    <!-- STATS ROW -->
+    <p class="section-title">Protocol Overview</p>
+    <div class="stats-grid">
+      <div class="stat-card fade-in fade-in-1">
+        <div class="stat-label">Total Allocated</div>
+        <div class="stat-value purple" id="stat-allocated">2,000</div>
+        <div class="stat-sub">VEST tokens locked in escrow</div>
+      </div>
+      <div class="stat-card fade-in fade-in-2">
+        <div class="stat-label">Total Claimed</div>
+        <div class="stat-value cyan" id="stat-claimed">0</div>
+        <div class="stat-sub">VEST tokens withdrawn by beneficiaries</div>
+      </div>
+      <div class="stat-card fade-in fade-in-3">
+        <div class="stat-label">Unallocated Balance</div>
+        <div class="stat-value green" id="stat-unallocated">8,000</div>
+        <div class="stat-sub">VEST available for owner withdrawal</div>
+      </div>
+      <div class="stat-card fade-in fade-in-4">
+        <div class="stat-label">Vesting Progress</div>
+        <div class="stat-value amber" id="stat-progress">0%</div>
+        <div class="stat-sub" id="stat-progress-days">Day 0 of 365</div>
+      </div>
+    </div>
+
+    <!-- VESTING TIMELINE -->
+    <div class="timeline-card fade-in fade-in-2">
+      <div class="timeline-header">
+        <div>
+          <div class="timeline-title">📅 Vesting Timeline</div>
+          <div class="timeline-dates" id="timeline-dates">Start: Day 0 → Cliff: Day 90 → Full Vesting: Day 365</div>
+        </div>
+        <div style="display:flex;gap:12px;">
+          <button class="btn-wallet" style="padding:8px 16px;font-size:13px;" onclick="setTime(0)">Reset</button>
+          <button class="btn-wallet" style="padding:8px 16px;font-size:13px;" onclick="setTime(91)">Skip to 91 days</button>
+          <button class="btn-wallet" style="padding:8px 16px;font-size:13px;" onclick="setTime(182)">Skip to 6 months</button>
+          <button class="btn-wallet" style="padding:8px 16px;font-size:13px;" onclick="setTime(365)">Full Vested</button>
+        </div>
+      </div>
+      <div class="timeline-track">
+        <div class="timeline-fill" id="timeline-fill" style="width:0%"></div>
+        <div class="timeline-cliff" id="cliff-marker" style="left:24.66%"></div>
+        <div class="timeline-now" id="now-marker" style="left:0%"></div>
+      </div>
+      <div class="timeline-labels">
+        <span>Start (Day 0)</span>
+        <span style="color:var(--amber)">Cliff (Day 90)</span>
+        <span>Full Vesting (Day 365)</span>
+      </div>
+    </div>
+
+    <!-- BENEFICIARIES -->
+    <p class="section-title">Beneficiaries</p>
+    <div class="beneficiaries-grid">
+
+      <!-- ALICE -->
+      <div class="ben-card alice fade-in fade-in-3">
+        <div class="ben-header">
+          <div class="ben-identity">
+            <div class="ben-avatar">A</div>
+            <div>
+              <div class="ben-name">Alice</div>
+              <div class="ben-address">0x7099...79C8</div>
+            </div>
+          </div>
+          <div class="ring-wrap">
+            <svg class="ring-svg" width="90" height="90" viewBox="0 0 90 90">
+              <defs>
+                <linearGradient id="purpleGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#8b5cf6"/>
+                  <stop offset="100%" stop-color="#a78bfa"/>
+                </linearGradient>
+              </defs>
+              <circle class="ring-bg" cx="45" cy="45" r="35"/>
+              <circle class="ring-fill" cx="45" cy="45" r="35"
+                id="alice-ring"
+                stroke-dasharray="219.9"
+                stroke-dashoffset="219.9"/>
+            </svg>
+            <div class="ring-text">
+              <div class="ring-pct" id="alice-ring-pct">0%</div>
+              <div class="ring-label">Vested</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ben-stats">
+          <div class="ben-stat">
+            <div class="ben-stat-label">Allocation</div>
+            <div class="ben-stat-value" style="color:var(--purple-light)">1,200 VEST</div>
+          </div>
+          <div class="ben-stat">
+            <div class="ben-stat-label">Claimed</div>
+            <div class="ben-stat-value" id="alice-claimed" style="color:var(--green-light)">0 VEST</div>
+          </div>
+          <div class="ben-stat">
+            <div class="ben-stat-label">Claimable</div>
+            <div class="ben-stat-value" id="alice-claimable" style="color:var(--cyan-light)">0 VEST</div>
+          </div>
+        </div>
+
+        <div class="progress-bar-wrap">
+          <div class="progress-label">
+            <span>Vested Progress</span>
+            <span id="alice-pct-label">0 / 1,200 VEST</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" id="alice-bar" style="width:0%"></div></div>
+        </div>
+        <div class="progress-bar-wrap">
+          <div class="progress-label">
+            <span>Claimed</span>
+            <span id="alice-claimed-label">0 / 1,200 VEST</span>
+          </div>
+          <div class="progress-bar" style="height:4px;"><div class="progress-fill" id="alice-claimed-bar" style="width:0%;background:var(--green);"></div></div>
+        </div>
+
+        <button class="btn-claim disabled" id="alice-claim-btn" onclick="doClaim('alice')">
+          🔒 Locked — Cliff not reached
+        </button>
+      </div>
+
+      <!-- BOB -->
+      <div class="ben-card bob fade-in fade-in-4">
+        <div class="ben-header">
+          <div class="ben-identity">
+            <div class="ben-avatar">B</div>
+            <div>
+              <div class="ben-name">Bob</div>
+              <div class="ben-address">0xe32b...A539</div>
+            </div>
+          </div>
+          <div class="ring-wrap">
+            <svg class="ring-svg" width="90" height="90" viewBox="0 0 90 90">
+              <defs>
+                <linearGradient id="cyanGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#06b6d4"/>
+                  <stop offset="100%" stop-color="#67e8f9"/>
+                </linearGradient>
+              </defs>
+              <circle class="ring-bg" cx="45" cy="45" r="35"/>
+              <circle class="ring-fill" cx="45" cy="45" r="35"
+                id="bob-ring"
+                stroke-dasharray="219.9"
+                stroke-dashoffset="219.9"/>
+            </svg>
+            <div class="ring-text">
+              <div class="ring-pct" id="bob-ring-pct">0%</div>
+              <div class="ring-label">Vested</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ben-stats">
+          <div class="ben-stat">
+            <div class="ben-stat-label">Allocation</div>
+            <div class="ben-stat-value" style="color:var(--cyan-light)">800 VEST</div>
+          </div>
+          <div class="ben-stat">
+            <div class="ben-stat-label">Claimed</div>
+            <div class="ben-stat-value" id="bob-claimed" style="color:var(--green-light)">0 VEST</div>
+          </div>
+          <div class="ben-stat">
+            <div class="ben-stat-label">Claimable</div>
+            <div class="ben-stat-value" id="bob-claimable" style="color:var(--purple-light)">0 VEST</div>
+          </div>
+        </div>
+
+        <div class="progress-bar-wrap">
+          <div class="progress-label">
+            <span>Vested Progress</span>
+            <span id="bob-pct-label">0 / 800 VEST</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" id="bob-bar" style="width:0%"></div></div>
+        </div>
+        <div class="progress-bar-wrap">
+          <div class="progress-label">
+            <span>Claimed</span>
+            <span id="bob-claimed-label">0 / 800 VEST</span>
+          </div>
+          <div class="progress-bar" style="height:4px;"><div class="progress-fill" id="bob-claimed-bar" style="width:0%;background:var(--cyan);"></div></div>
+        </div>
+
+        <button class="btn-claim disabled" id="bob-claim-btn" onclick="doClaim('bob')">
+          🔒 Locked — Cliff not reached
+        </button>
+      </div>
+
+    </div>
+
+    <!-- OWNER PANEL -->
+    <p class="section-title">Owner Controls</p>
+    <div class="owner-card fade-in fade-in-5">
+      <div class="owner-title">🔐 Owner Panel</div>
+      <div class="owner-sub">Only the contract owner can perform these administrative actions. Non-owners will be rejected by the smart contract.</div>
+      <div class="owner-actions">
+        <button class="owner-btn allocate" onclick="openAllocateModal()">
+          <span class="owner-btn-icon">➕</span>
+          <span class="owner-btn-label">Allocate Tokens</span>
+          <span class="owner-btn-desc">Assign a token allocation to a new beneficiary address</span>
+        </button>
+        <button class="owner-btn pause" id="pause-btn" onclick="togglePause()">
+          <span class="owner-btn-icon" id="pause-icon">⏸️</span>
+          <span class="owner-btn-label" id="pause-label">Pause Claims</span>
+          <span class="owner-btn-desc">Emergency pause: immediately stops all beneficiary claim() calls</span>
+        </button>
+        <button class="owner-btn withdraw" onclick="doWithdraw()">
+          <span class="owner-btn-icon">💸</span>
+          <span class="owner-btn-label">Withdraw Unallocated</span>
+          <span class="owner-btn-desc">Withdraw tokens NOT reserved for any beneficiary (safe)</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- CONTRACT ADDRESSES -->
+    <p class="section-title">Deployed Contracts (Local Anvil)</p>
+    <div class="contracts-grid fade-in fade-in-5">
+      <div class="contract-card">
+        <div class="contract-label">🪙 MockToken (VEST) — ERC-20</div>
+        <div class="contract-address">0x5FbDB2315678afecb367f032d93F642f64180aa3</div>
+      </div>
+      <div class="contract-card">
+        <div class="contract-label">🔐 TokenVesting — Escrow Contract</div>
+        <div class="contract-address">0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512</div>
+      </div>
+    </div>
+
+    <!-- ACTIVITY LOG -->
+    <div class="activity-card fade-in fade-in-6">
+      <div class="activity-header">
+        <div class="activity-title">📋 Transaction Log</div>
+        <div class="live-badge"><div class="live-dot"></div> Live</div>
+      </div>
+      <div id="activity-list">
+        <div class="activity-item">
+          <div class="activity-icon" style="background:rgba(16,185,129,0.1)">✅</div>
+          <div class="activity-body">
+            <div class="activity-title-text">TokenVesting Deployed</div>
+            <div class="activity-desc">Owner: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 — Cliff: 90 days — Duration: 365 days</div>
+          </div>
+          <div class="activity-time">Block #1</div>
+        </div>
+        <div class="activity-item">
+          <div class="activity-icon" style="background:rgba(139,92,246,0.1)">💰</div>
+          <div class="activity-body">
+            <div class="activity-title-text">Allocated 1,200 VEST → Alice</div>
+            <div class="activity-desc">BeneficiaryAllocated event emitted</div>
+          </div>
+          <div class="activity-time">Block #3</div>
+        </div>
+        <div class="activity-item">
+          <div class="activity-icon" style="background:rgba(6,182,212,0.1)">💰</div>
+          <div class="activity-body">
+            <div class="activity-title-text">Allocated 800 VEST → Bob</div>
+            <div class="activity-desc">BeneficiaryAllocated event emitted</div>
+          </div>
+          <div class="activity-time">Block #4</div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer>
+    Built with <span>Solidity 0.8.24</span> · OpenZeppelin v5 · Foundry · BNB Smart Chain Testnet Ready<br/>
+    <span>43 tests passing</span> — Unit · Fuzz · Invariant
+  </footer>
+</div>
+
+<!-- ALLOCATE MODAL -->
+<div class="modal-overlay" id="allocate-modal">
+  <div class="modal">
+    <div class="modal-title">➕ Allocate Tokens</div>
+    <div class="modal-sub">Assign a token allocation to a beneficiary address. Requires sufficient unallocated contract balance.</div>
+    <div class="modal-input-group">
+      <label class="modal-label">Beneficiary Address</label>
+      <input class="modal-input" id="alloc-address" placeholder="0x..." value="0xNewBeneficiary..."/>
+    </div>
+    <div class="modal-input-group">
+      <label class="modal-label">Token Amount (VEST)</label>
+      <input class="modal-input" id="alloc-amount" type="number" placeholder="e.g. 500" value="500"/>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="closeModal()">Cancel</button>
+      <button class="modal-btn primary" onclick="confirmAllocate()">Allocate Tokens</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toasts"></div>
+
+<script>
+  // ── STATE ──
+  const state = {
+    currentDay: 0,
+    cliffDay: 90,
+    vestingDuration: 365,
+    alice: { allocation: 1200, claimed: 0 },
+    bob: { allocation: 800, claimed: 0 },
+    totalInContract: 10000,
+    paused: false,
+    blockNumber: 4,
+    walletConnected: false
+  };
+
+  function vestedAmount(allocation, day) {
+    if (day < state.cliffDay) return 0;
+    if (day >= state.vestingDuration) return allocation;
+    return Math.floor(allocation * day / state.vestingDuration);
+  }
+
+  function claimable(person) {
+    const vested = vestedAmount(state[person].allocation, state.currentDay);
+    return Math.max(0, vested - state[person].claimed);
+  }
+
+  function updateUI() {
+    const day = state.currentDay;
+    const pct = Math.min(100, Math.round(day / state.vestingDuration * 100));
+
+    // Stats
+    const totalClaimed = state.alice.claimed + state.bob.claimed;
+    const totalAllocated = state.alice.allocation + state.bob.allocation;
+    const outstanding = totalAllocated - totalClaimed;
+    const unallocated = state.totalInContract - outstanding;
+
+    setText('stat-allocated', fmt(totalAllocated));
+    setText('stat-claimed', fmt(totalClaimed));
+    setText('stat-unallocated', fmt(Math.max(0, unallocated)));
+    setText('stat-progress', pct + '%');
+    setText('stat-progress-days', `Day ${day} of ${state.vestingDuration}`);
+
+    // Timeline
+    document.getElementById('timeline-fill').style.width = pct + '%';
+    document.getElementById('now-marker').style.left = Math.min(pct, 99) + '%';
+
+    // Alice
+    const aliceVested = vestedAmount(state.alice.allocation, day);
+    const aliceClaimable = claimable('alice');
+    const alicePct = Math.round(aliceVested / state.alice.allocation * 100);
+    updateBen('alice', 1200, aliceVested, state.alice.claimed, aliceClaimable, alicePct);
+
+    // Bob
+    const bobVested = vestedAmount(state.bob.allocation, day);
+    const bobClaimable = claimable('bob');
+    const bobPct = Math.round(bobVested / state.bob.allocation * 100);
+    updateBen('bob', 800, bobVested, state.bob.claimed, bobClaimable, bobPct);
+  }
+
+  function updateBen(name, alloc, vested, claimed, claimableAmt, pct) {
+    const ring = document.getElementById(name + '-ring');
+    const circumference = 219.9;
+    const offset = circumference - (pct / 100) * circumference;
+    ring.style.strokeDashoffset = offset;
+
+    setText(name + '-ring-pct', pct + '%');
+    setText(name + '-claimed', fmt(claimed) + ' VEST');
+    setText(name + '-claimable', fmt(claimableAmt) + ' VEST');
+    setText(name + '-pct-label', fmt(vested) + ' / ' + fmt(alloc) + ' VEST');
+    setText(name + '-claimed-label', fmt(claimed) + ' / ' + fmt(alloc) + ' VEST');
+
+    document.getElementById(name + '-bar').style.width = pct + '%';
+    document.getElementById(name + '-claimed-bar').style.width = (claimed / alloc * 100) + '%';
+
+    const btn = document.getElementById(name + '-claim-btn');
+    if (state.paused) {
+      btn.className = 'btn-claim disabled';
+      btn.textContent = '⏸️ Contract Paused — Claims Disabled';
+    } else if (state.currentDay < state.cliffDay) {
+      btn.className = 'btn-claim disabled';
+      btn.textContent = `🔒 Locked — Cliff in ${state.cliffDay - state.currentDay} days`;
+    } else if (claimableAmt > 0) {
+      btn.className = 'btn-claim active';
+      btn.textContent = `✅ Claim ${fmt(claimableAmt)} VEST Now`;
+    } else if (claimed >= alloc) {
+      btn.className = 'btn-claim claimed';
+      btn.textContent = '🎉 Fully Claimed!';
+    } else {
+      btn.className = 'btn-claim disabled';
+      btn.textContent = '⏳ No tokens available yet';
+    }
+  }
+
+  function setTime(day) {
+    state.currentDay = day;
+    updateUI();
+    showToast(`⏩ Time warped to Day ${day} (${Math.round(day/365*100)}% vested)`, day >= state.cliffDay ? 'success' : 'info');
+  }
+
+  function doClaim(person) {
+    if (state.paused) { showToast('⏸️ Contract is paused — claims disabled!', 'error'); return; }
+    if (state.currentDay < state.cliffDay) { showToast('🔒 Cliff not reached — nothing to claim!', 'warning'); return; }
+    const amt = claimable(person);
+    if (amt <= 0) { showToast('⏳ Nothing to claim right now!', 'warning'); return; }
+
+    state[person].claimed += amt;
+    state.blockNumber++;
+    addActivity(
+      person === 'alice' ? '🟣' : '🔵',
+      person === 'alice' ? 'rgba(139,92,246,0.1)' : 'rgba(6,182,212,0.1)',
+      `${person === 'alice' ? 'Alice' : 'Bob'} claimed ${fmt(amt)} VEST`,
+      `TokensClaimed event emitted — Remaining: ${fmt(state[person].allocation - state[person].claimed)} VEST`,
+      `Block #${state.blockNumber}`
+    );
+    updateUI();
+    showToast(`🎉 ${person === 'alice' ? 'Alice' : 'Bob'} successfully claimed ${fmt(amt)} VEST!`, 'success');
+  }
+
+  function togglePause() {
+    state.paused = !state.paused;
+    const icon = document.getElementById('pause-icon');
+    const label = document.getElementById('pause-label');
+    const btn = document.getElementById('pause-btn');
+    if (state.paused) {
+      icon.textContent = '▶️';
+      label.textContent = 'Unpause Claims';
+      btn.style.background = 'rgba(239,68,68,0.1)';
+      btn.style.borderColor = 'rgba(239,68,68,0.3)';
+      btn.style.color = '#fca5a5';
+      showToast('⏸️ Contract PAUSED — All claims disabled!', 'error');
+      addActivity('⏸️', 'rgba(239,68,68,0.1)', 'Contract Paused', 'Owner triggered emergency pause — EnforcedPause() on all claims', `Block #${++state.blockNumber}`);
+    } else {
+      icon.textContent = '⏸️';
+      label.textContent = 'Pause Claims';
+      btn.style.background = 'rgba(245,158,11,0.1)';
+      btn.style.borderColor = 'rgba(245,158,11,0.2)';
+      btn.style.color = 'var(--amber)';
+      showToast('▶️ Contract UNPAUSED — Claims re-enabled!', 'success');
+      addActivity('▶️', 'rgba(16,185,129,0.1)', 'Contract Unpaused', 'Owner lifted emergency pause — claims are active again', `Block #${++state.blockNumber}`);
+    }
+    updateUI();
+  }
+
+  function doWithdraw() {
+    const totalClaimed = state.alice.claimed + state.bob.claimed;
+    const outstanding = (state.alice.allocation + state.bob.allocation) - totalClaimed;
+    const unallocated = Math.max(0, state.totalInContract - outstanding);
+    if (unallocated <= 0) {
+      showToast('❌ No unallocated tokens to withdraw! All tokens are protected for beneficiaries.', 'error');
+      return;
+    }
+    state.totalInContract -= unallocated;
+    addActivity('💸', 'rgba(6,182,212,0.1)', `Owner withdrew ${fmt(unallocated)} VEST`, `UnallocatedTokensWithdrawn — Protected: ${fmt(outstanding)} VEST`, `Block #${++state.blockNumber}`);
+    showToast(`💸 Owner withdrew ${fmt(unallocated)} VEST (unallocated only — beneficiary tokens protected!)`, 'success');
+    updateUI();
+  }
+
+  function openAllocateModal() { document.getElementById('allocate-modal').classList.add('open'); }
+  function closeModal() { document.getElementById('allocate-modal').classList.remove('open'); }
+
+  function confirmAllocate() {
+    const addr = document.getElementById('alloc-address').value;
+    const amt = parseInt(document.getElementById('alloc-amount').value);
+    if (!amt || amt <= 0) { showToast('❌ Enter a valid amount!', 'error'); return; }
+    const outstanding = (state.alice.allocation + state.bob.allocation) - (state.alice.claimed + state.bob.claimed);
+    const unallocated = state.totalInContract - outstanding;
+    if (amt > unallocated) {
+      showToast(`❌ InsufficientInventory! Only ${fmt(unallocated)} VEST available.`, 'error');
+      return;
+    }
+    state.totalInContract += amt;
+    state.alice.allocation += amt; // demo only
+    addActivity('➕', 'rgba(139,92,246,0.1)', `Allocated ${fmt(amt)} VEST to ${addr.slice(0,10)}...`, 'BeneficiaryAllocated event emitted', `Block #${++state.blockNumber}`);
+    closeModal();
+    showToast(`✅ Allocated ${fmt(amt)} VEST successfully!`, 'success');
+    updateUI();
+  }
+
+  function connectWallet() {
+    state.walletConnected = !state.walletConnected;
+    const btn = document.querySelector('.btn-wallet');
+    if (state.walletConnected) {
+      btn.textContent = '✅ 0xf39F...2266';
+      showToast('🔗 Wallet connected: 0xf39Fd6...2266 (Owner)', 'success');
+    } else {
+      btn.textContent = '🔗 Connect Wallet';
+    }
+  }
+
+  function addActivity(icon, iconBg, title, desc, block) {
+    const list = document.getElementById('activity-list');
+    const item = document.createElement('div');
+    item.className = 'activity-item';
+    item.style.animation = 'fadeIn 0.4s ease';
+    item.innerHTML = `
+      <div class="activity-icon" style="background:${iconBg}">${icon}</div>
+      <div class="activity-body">
+        <div class="activity-title-text">${title}</div>
+        <div class="activity-desc">${desc}</div>
+      </div>
+      <div class="activity-time">${block}</div>
+    `;
+    list.insertBefore(item, list.firstChild);
+  }
+
+  function showToast(msg, type = 'info') {
+    const c = document.getElementById('toasts');
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    t.textContent = msg;
+    c.appendChild(t);
+    setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity 0.5s'; setTimeout(() => t.remove(), 500); }, 4000);
+  }
+
+  function setText(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
+  function fmt(n) { return Math.round(n).toLocaleString(); }
+
+  // Init
+  updateUI();
+
+  // Auto-animate on load
+  setTimeout(() => showToast('🚀 Dashboard loaded! Use the Skip buttons to simulate time.', 'info'), 800);
+</script>
+</body>
+</html>

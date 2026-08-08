@@ -1,0 +1,22 @@
+# Environment Secrets
+.env
+*.env
+.env.*
+!.env.example
+
+# Foundry Artifacts & Cache
+out/
+cache/
+broadcast/
+
+# Node & Dependencies
+node_modules/
+
+# Submodules (optional check-in, excluded build output)
+lib/
+
+# IDE / System files
+.vscode/
+.idea/
+.DS_Store
+*.log
