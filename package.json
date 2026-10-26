@@ -1,0 +1,21 @@
+{
+  "name": "erc20-token-vesting-escrow",
+  "version": "1.0.0",
+  "description": "ERC-20 Token Vesting & Claim Escrow Protocol with Live Dashboard",
+  "main": "dashboard/index.html",
+  "scripts": {
+    "start": "npx -y serve dashboard -p 3000",
+    "open": "cmd.exe /c start http://localhost:3000",
+    "deploy-local": "forge script script/DeployMockToken.s.sol --rpc-url http://127.0.0.1:8545 --broadcast && forge script script/DeployVesting.s.sol --rpc-url http://127.0.0.1:8545 --broadcast && forge script script/ConfigureVesting.s.sol --rpc-url http://127.0.0.1:8545 --broadcast",
+    "demo": "npm run deploy-local && npm run open"
+  },
+  "keywords": [
+    "solidity",
+    "foundry",
+    "erc20",
+    "token-vesting",
+    "escrow"
+  ],
+  "author": "Abhijit0810",
+  "license": "MIT"
+}

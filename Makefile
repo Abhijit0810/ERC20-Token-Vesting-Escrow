@@ -39,8 +39,18 @@ configure-vesting:
 demo-claim:
 	$(FORGE) script script/DemoClaim.s.sol --rpc-url $(BSC_TESTNET_RPC) --broadcast -vvvv
 
+open-dashboard:
+	cmd.exe /c start http://localhost:3000
+
+demo-local:
+	$(FORGE) script script/DeployMockToken.s.sol --rpc-url http://127.0.0.1:8545 --broadcast
+	$(FORGE) script script/DeployVesting.s.sol --rpc-url http://127.0.0.1:8545 --broadcast
+	$(FORGE) script script/ConfigureVesting.s.sol --rpc-url http://127.0.0.1:8545 --broadcast
+	cmd.exe /c start http://localhost:3000
+
 verify-token:
 	$(FORGE) verify-contract $(MOCK_TOKEN_ADDRESS) src/MockToken.sol:MockToken --chain 97 --verifier-url https://api-testnet.bscscan.com/api --compiler-version v0.8.24+commit.e11b9ed9
 
 verify-vesting:
 	$(FORGE) verify-contract $(VESTING_CONTRACT_ADDRESS) src/TokenVesting.sol:TokenVesting --chain 97 --verifier-url https://api-testnet.bscscan.com/api --compiler-version v0.8.24+commit.e11b9ed9
+
